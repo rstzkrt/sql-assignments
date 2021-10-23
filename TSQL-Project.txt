@@ -1,0 +1,477 @@
+-- Table: AGENCY
+CREATE TABLE AGENCY (
+    agency_ID integer PRIMARY KEY IDENTITY(1,1),
+    agency_name varchar(25)  NOT NULL,
+    agency_address varchar(75)  NOT NULL
+) ;
+
+-- Table: BRANDS
+CREATE TABLE BRANDS (
+    brand_ID integer PRIMARY KEY IDENTITY(1,1),
+    brand_name varchar(30)  NOT NULL,
+    brand_model varchar(20)  NOT NULL
+) ;
+
+-- Table: CARS
+CREATE TABLE CARS (
+    car_ID integer  PRIMARY KEY IDENTITY(1,1),
+    fuel_type varchar(10)  NOT NULL,
+    BRANDS_brand_ID integer  NOT NULL,
+    AGENCY_agency_ID integer  NOT NULL,
+    Engine_engine_ID integer  NOT NULL,
+    door_number integer  NOT NULL
+) ;
+
+-- Table: CAR_COLOR
+CREATE TABLE CAR_COLOR (
+    car_color_ID integer  PRIMARY KEY IDENTITY(1,1),
+    CARS_car_ID integer  NOT NULL,
+    COLOR_color_ID integer  NOT NULL
+) ;
+
+-- Table: COLOR
+CREATE TABLE COLOR (
+    color_ID integer  PRIMARY KEY IDENTITY(1,1),
+    color_name varchar(10)  NOT NULL
+) ;
+
+-- Table: Customer
+CREATE TABLE Customer (
+    customer_name varchar(20)  NOT NULL,
+    customer_ID integer  PRIMARY KEY IDENTITY(1,1),
+    customer_address varchar(75)  NOT NULL,
+    customer_surname varchar(20)  NOT NULL,
+    date_of_birth date  NOT NULL
+) ;
+
+-- Table: Engine
+CREATE TABLE Engine (
+    engine_ID integer  PRIMARY KEY IDENTITY(1,1),
+    engine_name varchar(10)  NULL,
+    engine_size numeric(5,4)  NOT NULL
+) ;
+
+-- Table: Rental
+CREATE TABLE Rental (
+    rental_ID integer  PRIMARY KEY IDENTITY(1,1),
+    Customer_column_ID integer  NOT NULL,
+    cost numeric(10,2)  NOT NULL,
+    rental_date date  NOT NULL,
+    CARS_car_ID integer  NOT NULL
+) ;
+
+-- Table: Rental_Modified
+CREATE TABLE Rental_Modified (
+    rental_modified_ID integer PRIMARY KEY IDENTITY(1,1),
+    rental_ID integer NOT NULL,
+    Customer_column_ID integer NOT NULL,
+    cost numeric(10, 2) NOT NULL,
+    new_cost numeric(10, 2) NOT NULL,
+    rental_date date NOT NULL,
+    modified_date date NOT NULL,
+    CARS_car_ID integer NOT NULL,
+    usr varchar(50) NOT NULL,
+) ;
+
+-- foreign keys
+-- Reference: CARS_AGENCY (table: CARS)
+ALTER TABLE CARS ADD CONSTRAINT CARS_AGENCY
+    FOREIGN KEY (AGENCY_agency_ID)
+    REFERENCES AGENCY (agency_ID);
+
+-- Reference: CARS_BRANDS (table: CARS)
+ALTER TABLE CARS ADD CONSTRAINT CARS_BRANDS
+    FOREIGN KEY (BRANDS_brand_ID)
+    REFERENCES BRANDS (brand_ID);
+
+-- Reference: CARS_Engine (table: CARS)
+ALTER TABLE CARS ADD CONSTRAINT CARS_Engine
+    FOREIGN KEY (Engine_engine_ID)
+    REFERENCES Engine (engine_ID);
+
+-- Reference: CAR_COLOR_COLOR (table: CAR_COLOR)
+ALTER TABLE CAR_COLOR ADD CONSTRAINT CAR_COLOR_COLOR
+    FOREIGN KEY (COLOR_color_ID)
+    REFERENCES COLOR (color_ID);
+
+-- Reference: CAR_PROPRETIES_CARS (table: CAR_COLOR)
+ALTER TABLE CAR_COLOR ADD CONSTRAINT CAR_PROPRETIES_CARS
+    FOREIGN KEY (CARS_car_ID)
+    REFERENCES CARS (car_ID);
+
+-- Reference: Rental_CARS (table: Rental)
+ALTER TABLE Rental ADD CONSTRAINT Rental_CARS
+    FOREIGN KEY (CARS_car_ID)
+    REFERENCES CARS (car_ID);
+
+-- Reference: Rental_Customer (table: Rental)
+ALTER TABLE Rental ADD CONSTRAINT Rental_Customer
+    FOREIGN KEY (Customer_column_ID)
+    REFERENCES Customer (customer_ID);
+
+-- End of file.
+
+INSERT INTO agency(agency_name,agency_address) 
+VALUES('Rent a Car','POLAND');
+INSERT INTO agency(agency_name,agency_address) 
+VALUES('Rent Center','England');
+INSERT INTO agency(agency_name,agency_address) 
+VALUES('RentaLL','France');   
+
+INSERT INTO Customer(customer_name,customer_address,customer_surname,date_of_birth)
+VALUES('JOHN','USA','SMITH',CONVERT(DATETIME,'06-05-1965',103));
+INSERT INTO Customer(customer_name,customer_address,customer_surname,date_of_birth)
+VALUES('TOMAS','PL','PONCZAK',CONVERT(DATETIME,'12-01-1989',103));
+INSERT INTO Customer(customer_name,customer_address,customer_surname,date_of_birth)
+VALUES('ALI','TR','ELMA',CONVERT(DATETIME,'24-09-1995',103));
+
+INSERT INTO BRANDS(brand_name,brand_model)
+VALUES('BMW','M1');
+INSERT INTO BRANDS(brand_name,brand_model)
+VALUES('MERCEDES','GT63');
+INSERT INTO BRANDS(brand_name,brand_model)
+VALUES('PORSCHE','911');
+
+INSERT INTO Engine(engine_name,engine_size)
+VALUES('N74','6'); 
+INSERT INTO Engine(engine_name,engine_size)
+VALUES('M277','7'); 
+INSERT INTO Engine(engine_name,engine_size)
+VALUES('TURBOS','4'); 
+
+INSERT INTO color(color_name)
+VALUES('BLUE');
+INSERT INTO color(color_name)
+VALUES('RED');
+INSERT INTO color(color_name)
+VALUES('GREEN');
+INSERT INTO color(color_name)
+VALUES('SILVER');
+
+INSERT INTO CARS(fuel_type,BRANDS_brand_ID,AGENCY_agency_ID,ENGINE_engine_ID,door_number)
+VALUES('gas',1,1,1,4);
+INSERT INTO CARS(fuel_type,BRANDS_brand_ID,AGENCY_agency_ID,ENGINE_engine_ID,door_number)
+VALUES('hybrid',2,2,2,2);
+INSERT INTO CARS(fuel_type,BRANDS_brand_ID,AGENCY_agency_ID,ENGINE_engine_ID,door_number)
+VALUES('electric',3,3,3,2);
+
+INSERT INTO Rental(CUSTOMER_column_ID,cost,rental_date,CARS_car_ID)
+VALUES(1,500,GETDATE(),1);
+INSERT INTO Rental(CUSTOMER_column_ID,cost,rental_date,CARS_car_ID)
+VALUES(2,1000,GETDATE(),2);
+INSERT INTO Rental(CUSTOMER_column_ID,cost,rental_date,CARS_car_ID)
+VALUES(3,2500,GETDATE(),3);
+
+INSERT INTO car_color(CARS_car_ID,COLOR_color_ID)
+VALUES(2,1);
+INSERT INTO car_color(CARS_car_ID,COLOR_color_ID)
+VALUES(1,3);
+INSERT INTO car_color(CARS_car_ID,COLOR_color_ID)
+VALUES(3,3);
+
+-------------------------------TRIGGERS---------------------------------
+
+DROP TRIGGER trg_delete_rental;
+CREATE TRIGGER trg_delete_rental ON RENTAL
+FOR DELETE
+AS
+DECLARE @c_rental_ID INT;
+DECLARE @c_cost INT;
+DECLARE c_rentals CURSOR FOR
+SELECT rental_ID, cost FROM deleted WHERE cost > 200
+OPEN c_rentals;
+BEGIN TRY
+	FETCH NEXT FROM c_rentals INTO @c_rental_ID, @c_cost
+	IF @@FETCH_STATUS = 0
+		BEGIN
+			ROLLBACK
+			DECLARE @errMessage1 nvarchar(50) = 'You cannot delete rentals with a rental cost over $200.0';
+			THROW 51000, @errMessage1, 1
+			--RAISERROR('You cannot delete rentals with a rental cost over $200.0',0,1)
+		END
+END TRY
+BEGIN CATCH
+	PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH
+CLOSE c_rentals
+DEALLOCATE c_rentals
+
+--DELETE FROM RENTAL WHERE cost=2500;
+--select * from rental;
+
+
+------------------------------------------------------------------------------------------------------------------
+Drop trigger trg_insert_rental;
+CREATE TRIGGER trg_insert_rental ON RENTAL
+FOR INSERT
+AS
+DECLARE @test INT;
+DECLARE @customer_ID INT;
+DECLARE c_rentals CURSOR FOR
+SELECT Customer_column_ID FROM RENTAL WHERE CUSTOMER_COLUMN_ID = (SELECT Customer_column_ID FROM INSERTED)--SYSTEM TABLES "INSERTED"
+OPEN c_rentals;
+BEGIN TRY
+	FETCH NEXT FROM c_rentals INTO @customer_ID
+	IF @@FETCH_STATUS = 0
+		BEGIN
+			ROLLBACK
+			DECLARE @errMessage nvarchar(50) = 'You cannot rent two cars at the same time!';
+			THROW 51000, @errMessage, 1
+			--RAISERROR('You cannot rent two cars at the same time!',0,1) *I ADDED TRY CATCH INSTEAD OF USING RAISERROR()
+		END
+END TRY
+BEGIN CATCH
+	PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH
+CLOSE c_rentals
+DEALLOCATE c_rentals
+
+--INSERT INTO Rental(CUSTOMER_column_ID,cost,rental_date,CARS_car_ID)
+--VALUES(1,500,GETDATE(),1);
+
+--select * from rental; 
+
+------------------------------------------------------------------------------------------------------------
+CREATE TRIGGER trg_update_rental ON RENTAL
+FOR UPDATE
+AS
+DECLARE @old_rental_ID INT;
+DECLARE @old_customer_column_ID INT;
+DECLARE @old_cost INT;
+DECLARE @old_rental_date DATETIME;
+DECLARE @old_cars_car_ID INT;
+DECLARE @new_rental_ID INT;
+DECLARE @new_cost INT;
+DECLARE c_rentals CURSOR FOR
+SELECT rental_ID, cost FROM inserted
+OPEN c_rentals;
+BEGIN
+	FETCH NEXT FROM c_rentals INTO @new_rental_ID, @new_cost
+	IF @new_cost < 200
+		BEGIN
+			ROLLBACK
+			RAISERROR('The rental cost cannot be lover than $200.0',0,1)
+		END
+	ELSE
+		BEGIN
+			SELECT @old_rental_ID = rental_ID, @old_customer_column_ID = Customer_column_ID, @old_cost = cost, @old_rental_date = rental_date, @old_cars_car_ID = CARS_car_ID FROM deleted ----SYSTEM TABLES "DELETED"
+			INSERT INTO RENTAL_MODIFIED
+			VALUES (@new_rental_ID, @old_customer_column_ID, @old_cost, @new_cost, @old_rental_date, GETDATE(), @old_cars_car_ID, SUSER_NAME());
+			PRINT 'One record has been updated and saved into the RENTAL_MODIFIED table!';
+		END
+END
+CLOSE c_rentals
+DEALLOCATE c_rentals
+
+--UPDATE RENTAL SET COST = '199' WHERE cost ='500';
+--select * from rental;
+
+------------------------------------PROCEDURES-------------------------------------
+DROP PROCEDURE print_agency_cars;
+/* "OLD PROCEDURE print_agency_cars"
+CREATE PROCEDURE print_agency_cars (@a_name varchar(50))
+AS
+declare @brand_name VARCHAR(50);
+declare @brand_model VARCHAR(50);
+declare @car_ID INT;
+declare @fuel_type VARCHAR(50);
+declare @door_number INT;
+declare @engine_name VARCHAR(50);
+declare @engine_size INT;
+declare c_cars cursor for
+SELECT b.brand_name, b.brand_model, c.car_ID, c.fuel_type, c.door_number, e.engine_name, e.engine_size
+FROM BRANDS b
+INNER JOIN CARS c on b.brand_ID = c.brands_brand_ID
+INNER JOIN ENGINE e on c.engine_engine_ID = e.engine_ID
+INNER JOIN AGENCY a on c.agency_agency_ID = a.agency_ID
+WHERE a.agency_name = @a_name;
+OPEN c_cars  
+BEGIN
+	IF NOT EXISTS (SELECT 1 FROM AGENCY WHERE agency_name = @a_name)
+		BEGIN
+			RAISERROR('Agency: (%s) does not exists!',0,1,@a_name)
+		END
+	ELSE IF (SELECT COUNT(*) FROM BRANDS b
+			INNER JOIN CARS c on b.brand_ID = c.brands_brand_ID
+			INNER JOIN ENGINE e on c.engine_engine_ID = e.engine_ID
+			INNER JOIN AGENCY a on c.agency_agency_ID = a.agency_ID
+			WHERE a.agency_name = @a_name) = 0
+		BEGIN
+			RAISERROR('Agency:(%s) does not have any car.',0,1,@a_name)
+		END
+	ELSE
+		BEGIN
+			FETCH NEXT FROM c_cars INTO @brand_name, @brand_model, @car_ID, @fuel_type, @door_number, @engine_name, @engine_size
+			IF @car_ID is NOT NULL
+				BEGIN
+					WHILE @@FETCH_STATUS = 0
+						BEGIN
+							PRINT 'Car ID: '+CAST(@car_ID AS VARCHAR)+', Brand: '+@brand_name+', Model: '+@brand_model+', Fuel type: '+@fuel_type+', Doors: '+CAST(@door_number AS VARCHAR)+', Engine: '+@engine_name+', Engine size: '+CAST(@engine_size AS VARCHAR)+''
+							FETCH NEXT FROM c_cars INTO @brand_name, @brand_model, @car_ID, @fuel_type, @door_number, @engine_name, @engine_size
+						END
+					SELECT b.brand_name, b.brand_model, c.car_ID, c.fuel_type, c.door_number, e.engine_name, e.engine_size
+					FROM BRANDS b
+					INNER JOIN CARS c on b.brand_ID = c.brands_brand_ID
+					INNER JOIN ENGINE e on c.engine_engine_ID = e.engine_ID
+					INNER JOIN AGENCY a on c.agency_agency_ID = a.agency_ID
+					WHERE a.agency_name = @a_name;
+				END
+		END
+END
+CLOSE c_cars
+DEALLOCATE c_cars
+
+--EXECUTE PRINT_AGENCY_CARS 'RentaLL';
+*/
+--PROCEDURE print_agency_cars WITH OUTPUT PRMTR.
+CREATE PROCEDURE print_agency_cars (@a_name varchar(50), @numberOfCars INT OUT)
+AS
+declare @brand_name VARCHAR(50);
+declare @brand_model VARCHAR(50);
+declare @car_ID INT;
+declare @fuel_type VARCHAR(50);
+declare @door_number INT;
+declare @engine_name VARCHAR(50);
+declare @engine_size INT;
+DECLARE @numOfCars INT = 0;
+declare c_cars cursor for
+SELECT b.brand_name, b.brand_model, c.car_ID, c.fuel_type, c.door_number, e.engine_name, e.engine_size
+FROM BRANDS b
+INNER JOIN CARS c on b.brand_ID = c.brands_brand_ID
+INNER JOIN ENGINE e on c.engine_engine_ID = e.engine_ID
+INNER JOIN AGENCY a on c.agency_agency_ID = a.agency_ID
+WHERE a.agency_name = @a_name;
+OPEN c_cars
+BEGIN TRY
+	IF NOT EXISTS (SELECT 1 FROM AGENCY WHERE agency_name = @a_name)
+		BEGIN;
+			DECLARE @errMsg1 nvarchar(50) = 'Agency, "'+@a_name+'" does not exists!';
+			THROW 51000, @errMsg1, 1
+		END;
+	ELSE IF (SELECT COUNT(*) FROM BRANDS b
+			INNER JOIN CARS c on b.brand_ID = c.brands_brand_ID
+			INNER JOIN ENGINE e on c.engine_engine_ID = e.engine_ID
+			INNER JOIN AGENCY a on c.agency_agency_ID = a.agency_ID
+			WHERE a.agency_name = @a_name) = 0
+		BEGIN;
+			DECLARE @errMsg2 nvarchar(50) = 'Agency, "'+@a_name+'" does not have any car.';
+			THROW 51000, @errMsg2, 1
+		END;
+	ELSE
+		BEGIN
+			FETCH NEXT FROM c_cars INTO @brand_name, @brand_model, @car_ID, @fuel_type, @door_number, @engine_name, @engine_size
+			IF @car_ID is NOT NULL
+				BEGIN
+					WHILE @@FETCH_STATUS = 0
+						BEGIN
+							PRINT 'Car ID: '+CAST(@car_ID AS VARCHAR)+', Brand: '+@brand_name+', Model: '+@brand_model+', Fuel type: '+@fuel_type+', Doors: '+CAST(@door_number AS VARCHAR)+', Engine: '+@engine_name+', Engine size: '+CAST(@engine_size AS VARCHAR)+''
+							SET @numOfCars = @numOfCars + 1;
+							FETCH NEXT FROM c_cars INTO @brand_name, @brand_model, @car_ID, @fuel_type, @door_number, @engine_name, @engine_size
+						END
+					set @numberOfCars = @numOfCars
+					SELECT b.brand_name, b.brand_model, c.car_ID, c.fuel_type, c.door_number, e.engine_name, e.engine_size
+					FROM BRANDS b
+					INNER JOIN CARS c on b.brand_ID = c.brands_brand_ID
+					INNER JOIN ENGINE e on c.engine_engine_ID = e.engine_ID
+					INNER JOIN AGENCY a on c.agency_agency_ID = a.agency_ID
+					WHERE a.agency_name = @a_name;
+				END
+		END
+END TRY
+BEGIN CATCH
+	PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH
+CLOSE c_cars
+DEALLOCATE c_cars
+ 
+ 
+declare @numberOfCars INT;
+exec print_agency_cars 'Rent Center', @numberOfCars output
+print 'Agency has "'+CAST(@numberOfCars as VARCHAR)+'" cars'
+
+
+
+DROP PROCEDURE add_rental;
+--RETURN PROCEDURE
+CREATE PROCEDURE add_rental (@cus_name varchar(50), @cus_surname varchar(50), @cus_address varchar(50), @cus_dob DATETIME, @r_cost INT, @r_car_ID INT) 
+AS
+declare @last_id INT;
+declare @cus_ID INT;
+declare @cus_column_ID INT;
+declare @engine_name VARCHAR(50);
+declare c_rentals cursor for
+select customer_column_ID FROM RENTAL WHERE customer_column_ID = (SELECT customer_ID FROM CUSTOMER WHERE customer_name = @cus_name AND customer_surname = @cus_surname AND customer_address = @cus_address AND date_of_birth = @cus_dob)
+BEGIN TRY
+OPEN c_rentals
+	SELECT @cus_ID = customer_ID FROM CUSTOMER WHERE customer_name = @cus_name AND customer_surname = @cus_surname AND customer_address = @cus_address AND date_of_birth = @cus_dob;
+	IF @cus_ID is NULL
+		BEGIN;
+			DECLARE @errMsg1 nvarchar(50) = 'Customer, "'+@cus_name+' '+@cus_surname+'" does not exists!';
+			THROW 51000, @errMsg1, 1
+		END;
+	ELSE
+		BEGIN
+			FETCH NEXT FROM c_rentals INTO @cus_column_ID
+			IF @cus_column_ID is NOT NULL
+				BEGIN;
+					DECLARE @errMsg2 nvarchar(50) = 'Customer, "'+@cus_name+' '+@cus_surname+'" already has a rental car!';
+					THROW 51000, @errMsg2, 1
+				END;
+			ELSE
+				BEGIN
+					INSERT INTO RENTAL VALUES(@cus_ID, @r_cost, GETDATE(), @r_car_ID)
+					SELECT @last_id = MAX(rental_ID) FROM RENTAL
+					SELECT * FROM RENTAL
+					CLOSE c_rentals
+                    DEALLOCATE c_rentals
+					RETURN @last_id
+				END
+		END
+END TRY
+BEGIN CATCH
+	PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH
+CLOSE c_rentals
+DEALLOCATE c_rentals
+
+--declare @rentalID INT;
+--exec @rentalID = add_rental 'John','Smith','USA','1965-05-06',300,2
+--print 'Customer, rented a car with ID "'+CAST(@rentalID as VARCHAR)+'"'
+
+
+
+DROP PROCEDURE ADD_ENGINE;
+--OUTPUT PROCEDURE  
+CREATE PROCEDURE add_engine (@e_name varchar(50), @e_size INT, @e_ID INT OUT)
+AS
+declare @last_id INT;
+declare @count_id INT;
+declare @engine_name VARCHAR(50);
+declare c_engines cursor for
+select engine_name from ENGINE where engine_name = @e_name
+BEGIN TRY
+OPEN c_engines 
+	FETCH NEXT FROM c_engines INTO @engine_name
+	IF @engine_name is NOT NULL
+		BEGIN;
+			DECLARE @errMsg nvarchar(50) = 'Engine, "'+@e_name+'" is already exists!';
+			THROW 51000, @errMsg, 1
+		END;
+	ELSE
+		BEGIN
+			INSERT INTO ENGINE VALUES(@e_name, @e_size)
+			SELECT @last_id = MAX(engine_ID) FROM ENGINE
+			SET @e_ID = @last_id
+			SELECT * FROM ENGINE
+		END
+END TRY
+BEGIN CATCH
+	PRINT 'Error: ' + ERROR_MESSAGE();
+END CATCH
+CLOSE c_engines
+DEALLOCATE c_engines
+
+--declare @engineID INT;
+--exec add_engine 'VPZ',6, @engineID output
+--print 'Engine is added with ID: "'+CAST(@engineID as VARCHAR)+'"'
+select * from engine;
